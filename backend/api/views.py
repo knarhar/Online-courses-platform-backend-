@@ -8,14 +8,14 @@ from .serializers import CourseSerializer, ArticleSerializer
 
 
 @api_view(['GET'])
-def getRoutes(requst):
+def getRoutes(request):
     return Response('Api')
 
 
 @api_view(['GET'])
 def getCourses(request):
     courses = Course.objects.all()
-    serializer = CourseSerializer(courses, many=True)
+    serializer = CourseSerializer(courses, many=True, context={'request': request})
     return Response(serializer.data)
 
 
