@@ -23,8 +23,6 @@ class CourseCategory(models.Model):
 
 
 # Model for users
-
-
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     name = models.CharField(blank=True, null=True, max_length=50)
@@ -40,6 +38,7 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
 
 # Course model
 class Course(models.Model):
