@@ -18,7 +18,6 @@ class CourseSerializer(ModelSerializer):
         fields = '__all__'
 
 
-
 class ArticleSerializer(ModelSerializer):
     class Meta:
         model = Article
