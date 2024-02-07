@@ -8,6 +8,11 @@ class UserSerializer(ModelSerializer):
         model = CustomUser
         fields = '__all__'
 
+    def get_avatar(self, obj):
+        request = self.context.get('request')
+        if obj.avatar:
+            return request.build_absolute_uri(obj.avatar.url)
+        return None
 
 
 class CourseSerializer(ModelSerializer):

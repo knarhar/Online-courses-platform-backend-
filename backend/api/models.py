@@ -1,10 +1,9 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 from django.contrib.auth.models import AbstractUser
 import os
 
+
+# Create your models here.
 
 def user_pic_path(instance, filename):
     return os.path.join('user_pic', str(instance.id), filename)

@@ -5,13 +5,15 @@ from rest_framework import permissions, status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Course, Article, CustomUser
 from .serializers import CourseSerializer, ArticleSerializer, UserSerializer
-
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -45,7 +47,7 @@ def register_user(request):
             new_user = CustomUser.objects.create(
                 username=username,
                 email=email,
-                password=make_password(password),  # Хеширование пароля
+                password=make_password(password),
             )
             return JsonResponse({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
         except IntegrityError:
@@ -53,21 +55,76 @@ def register_user(request):
 
 # Create your views here.
 
+
+
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny])
+@permission_classes([AllowAny])
 @authentication_classes([SessionAuthentication])
 def login_view(request):
     if request.method == 'POST':
-        username = request.data.get('username')  # Используйте 'username' вместо 'email'
+        username = request.data.get('username')
         password = request.data.get('password')
 
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-            return Response({"message": "Login successful", "user_id": user.id}, status=status.HTTP_200_OK)
+            # Аутентификация прошла успешно
+
+            # Генерация токенов доступа и обновления
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+            # Возвращаем токены в ответе
+            return Response({
+                'message': 'Login successful',
+                'user_id': user.id,
+                'access_token': access_token,
+                'refresh_token': refresh_token,
+            }, status=status.HTTP_200_OK)
         else:
-            return Response({"message": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
+            # Неверные учетные данные
+            return Response({'message': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+def this_user_profile(request):
+    user = request.user  # This will give you the user associated with the access token
+
+    user_serializer = UserSerializer(user, context={'request': request})
+
+    context_data = {
+        "user": user_serializer.data,
+    }
+
+    # Do additional logic based on the user if needed
+
+    return Response(context_data, status=status.HTTP_200_OK)
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+@authentication_classes([SessionAuthentication])
+def profile(request, pk):
+    try:
+        user = CustomUser.objects.get(pk=pk)
+    except CustomUser.DoesNotExist:
+        return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    user_serializer = UserSerializer(user, context={'request': request})
+
+    context_data = {
+        "auth": False,
+    }
+
+    if request.user == user:
+        context_data['user'] = user_serializer.data
+
+        context_data["auth"] = True
+
+    return Response(context_data, status=status.HTTP_200_OK)
+
+
+
 
 @api_view(['GET'])
 def getRoutes(request):

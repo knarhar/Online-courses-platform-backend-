@@ -6,7 +6,7 @@ from django.contrib.auth.admin import UserAdmin
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
-    list_display = ('username', 'email', 'name','pic', 'bank_account', 'is_active', 'is_staff', 'created')
+    list_display = ('id','username', 'email', 'name','pic', 'bank_account', 'is_active', 'is_staff', 'created')
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
