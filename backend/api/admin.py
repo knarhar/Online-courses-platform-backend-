@@ -16,12 +16,12 @@ admin.site.register(CustomUser, CustomUserAdmin)
 
 @admin.register(CourseCategory)
 class CourseCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('id','name',)
 
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('title', 'description', 'display_category', 'is_paid', 'amount', 'currency', 'author')
+    list_display = ('title', 'description', 'display_category', 'is_paid', 'amount', 'currency', 'author', 'pic')
 
     def display_category(self, obj):
         return obj.category.name

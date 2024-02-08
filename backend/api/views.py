@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render
 from django.http import JsonResponse
-from rest_framework import permissions, status
+from rest_framework import permissions, status, generics
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -13,7 +13,7 @@ from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny, IsAuthenticated
-
+from django.shortcuts import get_object_or_404
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -140,10 +140,18 @@ def getCourses(request):
 
 @api_view(['GET'])
 def getCourse(request, pk):
-    courses = Course.objects.get(id=pk)
-    serializer = CourseSerializer(courses, many=False)
+    courses = get_object_or_404(Course.objects.prefetch_related('topic_set'), id=pk)
+    serializer = CourseSerializer(courses, context={'request': request}, many=False)
     return Response(serializer.data)
 
+
+@api_view(['GET'])
+def get_courses_by_category(request, category_name):
+    courses = Course.objects.filter(category=category_name)
+
+    serializer = CourseSerializer(courses, many=True, context={'request': request})
+
+    return Response(serializer.data)
 
 @api_view(['GET'])
 def getArticles(request):
