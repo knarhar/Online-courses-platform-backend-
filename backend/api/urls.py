@@ -3,7 +3,7 @@ from django.urls import path, include
 from . import views
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import register_user, get_courses_by_category
+from .views import register_user, get_courses_by_category, enroll_user, get_enrollment_status
 
 urlpatterns = [
     path('', views.getRoutes, name='routes'),
@@ -21,6 +21,8 @@ urlpatterns = [
     path('courses/<str:pk>/', views.getCourse, name='course'),
     path('courses/category/<str:category_name>/', get_courses_by_category, name='get_courses_by_category'),
 
+    path('enrollment/<str:course_id>/', enroll_user, name='enroll_user'),
+    path('enrollment/status/<str:course_id>/', get_enrollment_status, name='get_enrollment_status'),
 
     path('articles/', views.getArticles, name='articles'),
     path('articles/<str:pk>/', views.getArticle, name='article'),

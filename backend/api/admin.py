@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CourseCategory, Course, Topic, Lecture, Module, Article, Question, Answers, CustomUser
+from .models import CourseCategory, Course, Topic, Lecture, Module, Article, Question, Answers, CustomUser, Enrollment
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -27,6 +27,18 @@ class CourseAdmin(admin.ModelAdmin):
         return obj.category.name
     display_category.short_description = 'Category'
 
+
+@admin.register(Enrollment)
+class EnrollmentAdmin(admin.ModelAdmin):
+    list_display = ('display_user', 'display_course' ,'enrollment_date')
+
+    def display_course(self, obj):
+        return obj.course.title
+    display_course.short_description = 'course'
+
+    def display_user(self, obj):
+        return obj.user.username
+    display_user.short_description = 'user'
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):

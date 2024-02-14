@@ -60,6 +60,7 @@ class Course(models.Model):
         return self.title
 
 
+
 # Topics model
 class Topic(models.Model):
     title = models.CharField(max_length=255)
@@ -117,3 +118,12 @@ class Article(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Enrollment(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    enrollment_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user.username} - {self.course.title}'

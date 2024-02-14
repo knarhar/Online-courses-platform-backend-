@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import Course, Article, CustomUser, Topic, Lecture, Answers,Question,Module
+from .models import Course, Article, CustomUser, Topic, Lecture, Answers,Question,Module, Enrollment
 
 
 class AnswersSerializer(ModelSerializer):
@@ -78,6 +78,7 @@ class CourseSerializer(ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     pic = serializers.SerializerMethodField()
     topics = serializers.SerializerMethodField()
+    is_enrolled = serializers.SerializerMethodField()
 
     def get_topics(self, obj):
         topics = Topic.objects.filter(course=obj)
@@ -90,9 +91,27 @@ class CourseSerializer(ModelSerializer):
             return request.build_absolute_uri(obj.pic.url)
         return None
 
+    def get_is_enrolled(self, obj):
+        request = self.context.get('request')
+
+        try:
+            user = CustomUser.objects.get(pk=request.user.id)
+            if user.is_authenticated:
+                return Enrollment.objects.filter(user=user, course=obj).exists()
+        except CustomUser.DoesNotExist:
+            return False
+        return False
+
     class Meta:
         model = Course
-        fields = ['id','title', 'description', 'pic', 'category', 'category_name', 'is_paid', 'amount', 'currency', 'author', 'topics']
+        fields = ['id','title', 'description', 'pic', 'category', 'category_name', 'is_paid', 'amount', 'currency', 'author', 'topics', 'is_enrolled']
+
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enrollment
+        fields = '__all__'
+
 
 class ArticleSerializer(ModelSerializer):
     class Meta:

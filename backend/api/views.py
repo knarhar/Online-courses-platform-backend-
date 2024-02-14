@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Course, Article, CustomUser
-from .serializers import CourseSerializer, ArticleSerializer, UserSerializer
+from .models import Course, Article, CustomUser, Enrollment
+from .serializers import CourseSerializer, ArticleSerializer, UserSerializer, EnrollmentSerializer
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
@@ -103,7 +103,7 @@ def this_user_profile(request):
     return Response(context_data, status=status.HTTP_200_OK)
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
-@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def profile(request, pk):
     try:
         user = CustomUser.objects.get(pk=pk)
@@ -139,6 +139,8 @@ def getCourses(request):
 
 
 @api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+@permission_classes([IsAuthenticated])
 def getCourse(request, pk):
     courses = get_object_or_404(Course.objects.prefetch_related('topic_set'), id=pk)
     serializer = CourseSerializer(courses, context={'request': request}, many=False)
@@ -167,5 +169,24 @@ def getArticle(request, pk):
     return Response(serializer.data)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def enroll_user(request, course_id):
+    try:
+        course = Course.objects.get(pk=course_id)
+        enrollment = Enrollment.objects.create(user=request.user, course=course)
+        return Response({'message': 'Enrollment successful'})
+    except Course.DoesNotExist:
+        return Response({'error': 'Course not found'}, status=404)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_enrollment_status(request, course_id):
+    try:
+        course = Course.objects.get(pk=course_id)
+        enrollment = Enrollment.objects.get(user=request.user, course=course)
+        serializer = EnrollmentSerializer(enrollment)
+        return Response({'status': 'Enrolled', 'enrollment_data': serializer.data})
+    except Enrollment.DoesNotExist:
+        return Response({'status': 'Not Enrolled'})
