@@ -118,12 +118,20 @@ def profile(request, pk):
 
     if request.user == user:
         context_data['user'] = user_serializer.data
-
         context_data["auth"] = True
 
     return Response(context_data, status=status.HTTP_200_OK)
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    user_profile = CustomUser.objects.get(id=request.user.id)
 
+    serializer = UserSerializer(user_profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -150,10 +158,9 @@ def getCourse(request, pk):
 @api_view(['GET'])
 def get_courses_by_category(request, category_name):
     courses = Course.objects.filter(category=category_name)
-
     serializer = CourseSerializer(courses, many=True, context={'request': request})
-
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 def getArticles(request):
@@ -161,6 +168,11 @@ def getArticles(request):
     serializer = ArticleSerializer(articles, many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def get_articles_by_category(request, category_name):
+    articles = Article.objects.filter(category=category_name)
+    serializer = ArticleSerializer(articles, many=True, context={'request': request})
+    return Response(serializer.data)
 
 @api_view(['GET'])
 def getArticle(request, pk):
@@ -180,13 +192,21 @@ def enroll_user(request, course_id):
         return Response({'error': 'Course not found'}, status=404)
 
 
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def get_enrollment_status(request, course_id):
+#     try:
+#         course = Course.objects.get(pk=course_id)
+#         enrollment = Enrollment.objects.get(user=request.user, course=course)
+#         serializer = EnrollmentSerializer(enrollment)
+#         return Response({'status': 'Enrolled', 'enrollment_data': serializer.data})
+#     except Enrollment.DoesNotExist:
+#         return Response({'status': 'Not Enrolled'})
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_enrollment_status(request, course_id):
-    try:
-        course = Course.objects.get(pk=course_id)
-        enrollment = Enrollment.objects.get(user=request.user, course=course)
-        serializer = EnrollmentSerializer(enrollment)
-        return Response({'status': 'Enrolled', 'enrollment_data': serializer.data})
-    except Enrollment.DoesNotExist:
-        return Response({'status': 'Not Enrolled'})
+def my_courses(request):
+    enrollments = Enrollment.objects.filter(user=request.user)
+    serializer = EnrollmentSerializer(enrollments, many=True, context={'request': request})
+    return Response(serializer.data)
