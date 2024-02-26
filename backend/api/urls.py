@@ -21,6 +21,9 @@ urlpatterns = [
     path('courses/<str:pk>/', views.getCourse, name='course'),
     path('courses/category/<str:category_name>/', get_courses_by_category, name='get_courses_by_category'),
     path('my-courses/', my_courses, name='my-courses'),
+    path('courses/<int:course_id>/lectures/<int:lecture_id>/', views.getLecture, name='getLecture' ),
+    path('courses/<int:course_id>/topics/<int:topic_id>/lectures/', views.get_lectures_for_topic, name='get_lectures_for_topic'),
+
 
 
     path('enrollment/<str:course_id>/', enroll_user, name='enroll_user'),

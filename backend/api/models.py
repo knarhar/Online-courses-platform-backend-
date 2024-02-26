@@ -109,6 +109,33 @@ class Answers(models.Model):
         return f'{self.answer}  {self.is_correct}'
 
 
+class UserProgress(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    completed_modules = models.ManyToManyField(Module, through='ModuleProgress')
+    completed_lectures = models.ManyToManyField(Lecture, through='LectureProgress')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.course.title} Progress"
+
+class ModuleProgress(models.Model):
+    user_progress = models.ForeignKey(UserProgress, on_delete=models.CASCADE)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user_progress.user.username} - {self.module.title} Module Progress"
+
+class LectureProgress(models.Model):
+    user_progress = models.ForeignKey(UserProgress, on_delete=models.CASCADE)
+    lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE)
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user_progress.user.username} - {self.lecture.title} Lecture Progress"
+
+
+
 class Article(models.Model):
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=255, default='')

@@ -34,12 +34,10 @@ class ModuleSerializer(ModelSerializer):
         fields = ['title', 'topic', 'question']
 
 
-
-
 class LectureSerializer(ModelSerializer):
     class Meta:
         model = Lecture
-        fields = ['title', 'content']
+        fields = ['id','title', 'content']
 
 
 class TopicSerializer(ModelSerializer):

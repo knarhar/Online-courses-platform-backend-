@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CourseCategory, Course, Topic, Lecture, Module, Article, Question, Answers, CustomUser, Enrollment
+from .models import CourseCategory, Course, Topic, Lecture, Module, Article, Question, Answers, CustomUser, Enrollment, ModuleProgress, LectureProgress, UserProgress
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -68,3 +68,9 @@ class AnswersAdmin(admin.ModelAdmin):
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'description', 'content', 'category', 'pub_date')
+
+
+@admin.register(UserProgress)
+class UserProgressAdmin(admin.ModelAdmin):
+    list_display = ('id','user', 'course')
+

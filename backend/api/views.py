@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Course, Article, CustomUser, Enrollment
-from .serializers import CourseSerializer, ArticleSerializer, UserSerializer, EnrollmentSerializer
+from .models import Course, Article, CustomUser, Enrollment, Lecture
+from .serializers import CourseSerializer, ArticleSerializer, UserSerializer, EnrollmentSerializer, LectureSerializer
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
@@ -159,6 +159,26 @@ def getCourse(request, pk):
 def get_courses_by_category(request, category_name):
     courses = Course.objects.filter(category=category_name)
     serializer = CourseSerializer(courses, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_lectures_for_topic(request, course_id, topic_id):
+    try:
+        # Получите лекции для определенного раздела определенного курса
+        lectures = Lecture.objects.filter(topic__course_id=course_id, topic_id=topic_id)
+
+        # Используйте сериализатор для преобразования данных в формат JSON
+        serializer = LectureSerializer(lectures, many=True)
+
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+@api_view(['GET'])
+def getLecture(request, course_id, lecture_id):
+    lecture = Lecture.objects.get(id=lecture_id)
+    serializer = LectureSerializer(lecture, many=False)
     return Response(serializer.data)
 
 
