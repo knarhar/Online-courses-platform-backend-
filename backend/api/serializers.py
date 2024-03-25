@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import Course, Article, CustomUser, Topic, Lecture, Answers,Question,Module, Enrollment
+from .models import Course, Article, CustomUser, Topic, Lecture, Answers,Question,Module, Enrollment, UserProgress, ModuleProgress, LectureProgress
 
 
 class AnswersSerializer(ModelSerializer):
@@ -16,9 +16,10 @@ class QuestionSerializer(ModelSerializer):
         answers = Answers.objects.filter(question=obj)
         answer_serializer = AnswersSerializer(answers, many=True)
         return answer_serializer.data
+
     class Meta:
         model = Question
-        fields = ['question', 'answer']
+        fields = ['id', 'question', 'answer']
 
 
 class ModuleSerializer(ModelSerializer):
@@ -31,13 +32,13 @@ class ModuleSerializer(ModelSerializer):
 
     class Meta:
         model = Module
-        fields = ['title', 'topic', 'question']
+        fields = ['id', 'title', 'topic', 'question']
 
 
 class LectureSerializer(ModelSerializer):
     class Meta:
         model = Lecture
-        fields = ['id','title', 'content']
+        fields = ['id', 'title', 'content', 'link']
 
 
 class TopicSerializer(ModelSerializer):
@@ -122,3 +123,21 @@ class ArticleSerializer(ModelSerializer):
         model = Article
         fields = '__all__'
 
+class LectureProgressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LectureProgress
+        fields = ['lecture', 'is_completed']
+
+class ModuleProgressSerializer(serializers.ModelSerializer):
+    lecture_progress = LectureProgressSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ModuleProgress
+        fields = ['module', 'is_completed', 'lecture_progress']
+
+class UserProgressSerializer(serializers.ModelSerializer):
+    module_progress = ModuleProgressSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = UserProgress
+        fields = ['user', 'course', 'completed_modules', 'module_progress']

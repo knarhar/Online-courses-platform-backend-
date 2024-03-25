@@ -47,7 +47,7 @@ class TopicAdmin(admin.ModelAdmin):
 
 @admin.register(Lecture)
 class LectureAdmin(admin.ModelAdmin):
-    list_display = ('title', 'content', 'topic')
+    list_display = ('title', 'content', 'link','topic')
 
 
 @admin.register(Module)

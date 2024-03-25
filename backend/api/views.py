@@ -1,19 +1,20 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate
 from django.shortcuts import render
 from django.http import JsonResponse
-from rest_framework import permissions, status, generics
-from rest_framework.authentication import SessionAuthentication
+from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Course, Article, CustomUser, Enrollment, Lecture
-from .serializers import CourseSerializer, ArticleSerializer, UserSerializer, EnrollmentSerializer, LectureSerializer
+from .models import Course, Article, CustomUser, Enrollment, Lecture, Module, UserProgress
+from .serializers import CourseSerializer, ArticleSerializer, UserSerializer, EnrollmentSerializer, LectureSerializer, ModuleSerializer, UserProgressSerializer
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.shortcuts import get_object_or_404
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -22,13 +23,11 @@ def register_user(request):
         data = request.data
         username = data.get('username')
         password = data.get('password')
-        email = data.get('email')  # Добавлено поле email
-
-        # Проверка наличия обязательных полей
+        email = data.get('email')
         if not username or not password or not email:
             return JsonResponse({'error': 'Username, password, and email are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Проверка существующего пользователя по имени пользователя и почте
+
         User = get_user_model()
         try:
             User.objects.get(username=username)
@@ -53,13 +52,11 @@ def register_user(request):
         except IntegrityError:
             return JsonResponse({'error': 'User creation failed due to integrity error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# Create your views here.
 
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@authentication_classes([SessionAuthentication])
 def login_view(request):
     if request.method == 'POST':
         username = request.data.get('username')
@@ -68,14 +65,11 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            # Аутентификация прошла успешно
 
-            # Генерация токенов доступа и обновления
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
 
-            # Возвращаем токены в ответе
             return Response({
                 'message': 'Login successful',
                 'user_id': user.id,
@@ -83,22 +77,18 @@ def login_view(request):
                 'refresh_token': refresh_token,
             }, status=status.HTTP_200_OK)
         else:
-            # Неверные учетные данные
             return Response({'message': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 @authentication_classes([JWTAuthentication])
 def this_user_profile(request):
-    user = request.user  # This will give you the user associated with the access token
-
+    user = request.user
     user_serializer = UserSerializer(user, context={'request': request})
-
     context_data = {
         "user": user_serializer.data,
     }
-
-    # Do additional logic based on the user if needed
 
     return Response(context_data, status=status.HTTP_200_OK)
 @api_view(['GET'])
@@ -165,20 +155,23 @@ def get_courses_by_category(request, category_name):
 @api_view(['GET'])
 def get_lectures_for_topic(request, course_id, topic_id):
     try:
-        # Получите лекции для определенного раздела определенного курса
         lectures = Lecture.objects.filter(topic__course_id=course_id, topic_id=topic_id)
-
-        # Используйте сериализатор для преобразования данных в формат JSON
         serializer = LectureSerializer(lectures, many=True)
-
         return Response(serializer.data)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
 
 @api_view(['GET'])
 def getLecture(request, course_id, lecture_id):
     lecture = Lecture.objects.get(id=lecture_id)
     serializer = LectureSerializer(lecture, many=False)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def getModule(request, course_id, module_id):
+    module = Module.objects.get(id=module_id)
+    serializer = ModuleSerializer(module, many=False)
     return Response(serializer.data)
 
 
@@ -188,11 +181,13 @@ def getArticles(request):
     serializer = ArticleSerializer(articles, many=True)
     return Response(serializer.data)
 
+
 @api_view(['GET'])
 def get_articles_by_category(request, category_name):
     articles = Article.objects.filter(category=category_name)
     serializer = ArticleSerializer(articles, many=True, context={'request': request})
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 def getArticle(request, pk):
@@ -212,21 +207,25 @@ def enroll_user(request, course_id):
         return Response({'error': 'Course not found'}, status=404)
 
 
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def get_enrollment_status(request, course_id):
-#     try:
-#         course = Course.objects.get(pk=course_id)
-#         enrollment = Enrollment.objects.get(user=request.user, course=course)
-#         serializer = EnrollmentSerializer(enrollment)
-#         return Response({'status': 'Enrolled', 'enrollment_data': serializer.data})
-#     except Enrollment.DoesNotExist:
-#         return Response({'status': 'Not Enrolled'})
-
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def my_courses(request):
     enrollments = Enrollment.objects.filter(user=request.user)
     serializer = EnrollmentSerializer(enrollments, many=True, context={'request': request})
     return Response(serializer.data)
+
+
+@permission_classes([IsAuthenticated])
+class CourseProgressView(APIView):
+
+    def __init__(self):
+        pass
+
+    def get(self, request, course_id):
+        user = request.user
+        try:
+            user_progress = UserProgress.objects.get(user=user, course_id=course_id)
+            serializer = UserProgressSerializer(user_progress)
+            return Response(serializer.data)
+        except UserProgress.DoesNotExist:
+            return Response({'error': 'User progress not found for this course'}, status=status.HTTP_404_NOT_FOUND)

@@ -75,6 +75,7 @@ class Topic(models.Model):
 class Lecture(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
+    link = models.CharField(max_length=255, null=True)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -118,6 +119,7 @@ class UserProgress(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.course.title} Progress"
 
+
 class ModuleProgress(models.Model):
     user_progress = models.ForeignKey(UserProgress, on_delete=models.CASCADE)
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
@@ -125,6 +127,7 @@ class ModuleProgress(models.Model):
 
     def __str__(self):
         return f"{self.user_progress.user.username} - {self.module.title} Module Progress"
+
 
 class LectureProgress(models.Model):
     user_progress = models.ForeignKey(UserProgress, on_delete=models.CASCADE)
