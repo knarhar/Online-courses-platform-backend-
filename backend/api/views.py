@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Course, Article, CustomUser, Enrollment, Lecture, Module, UserProgress
+from .models import Course, Article, CustomUser, Enrollment, Lecture, Module, UserProgress, LectureProgress, Topic
 from .serializers import CourseSerializer, ArticleSerializer, UserSerializer, EnrollmentSerializer, LectureSerializer, ModuleSerializer, UserProgressSerializer
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
@@ -196,15 +196,22 @@ def getArticle(request, pk):
     return Response(serializer.data)
 
 
-@api_view(['POST'])
+@api_view(['POST', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def enroll_user(request, course_id):
     try:
         course = Course.objects.get(pk=course_id)
-        enrollment = Enrollment.objects.create(user=request.user, course=course)
-        return Response({'message': 'Enrollment successful'})
+        if request.method == 'POST':
+            enrollment = Enrollment.objects.create(user=request.user, course=course)
+            return Response({'message': 'Enrollment successful'})
+        elif request.method == 'DELETE':
+            enrollment = Enrollment.objects.get(user=request.user, course=course)
+            enrollment.delete()
+            return Response({'message': 'Unenrollment successful'})
     except Course.DoesNotExist:
         return Response({'error': 'Course not found'}, status=404)
+    except Enrollment.DoesNotExist:
+        return Response({'error': 'Enrollment not found'}, status=404)
 
 
 @api_view(['GET'])
@@ -224,8 +231,55 @@ class CourseProgressView(APIView):
     def get(self, request, course_id):
         user = request.user
         try:
+            # Получаем прогресс пользователя по курсу
             user_progress = UserProgress.objects.get(user=user, course_id=course_id)
+
+            # Получаем общее количество лекций и модулей для данного курса
+            total_lectures = Lecture.objects.filter(topic__course_id=course_id).count()
+            total_modules = Module.objects.filter(topic__course_id=course_id).count()
+
+            # Сериализуем данные о прогрессе пользователя
             serializer = UserProgressSerializer(user_progress)
-            return Response(serializer.data)
+            user_progress_data = serializer.data
+
+            # Добавляем общее количество лекций и модулей в данные о прогрессе пользователя
+            user_progress_data['total_lectures'] = total_lectures
+            user_progress_data['total_modules'] = total_modules
+
+            return Response(user_progress_data)
         except UserProgress.DoesNotExist:
             return Response({'error': 'User progress not found for this course'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+def initialize_user_progress(request, user_id, course_id):
+    # Проверяем, существует ли уже прогресс пользователя для этого курса
+    user_progress, created = UserProgress.objects.get_or_create(user_id=user_id, course_id=course_id)
+
+    if created:
+        # Если прогресс пользователя только что создан, инициализируем его для первой лекции курса
+        user_progress.save()
+
+        return Response({'message': 'User progress initialized successfully'}, status=status.HTTP_201_CREATED)
+    else:
+        return Response({'message': 'User progress already initialized'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def update_lecture_progress(request, course_id, topic_id, lecture_id):
+    user = request.user
+
+    try:
+        # Получаем или создаем запись прогресса пользователя для этого курса и темы
+        user_progress, created = UserProgress.objects.get_or_create(
+            user=user, course_id=course_id
+        )
+        user_progress.completed_topics.add(topic_id)
+        lecture = Lecture.objects.get(pk=lecture_id)
+
+        user_progress.completed_lectures.add(lecture)
+        user_progress.save()
+
+        return Response({'message': 'Lecture completed successfully'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

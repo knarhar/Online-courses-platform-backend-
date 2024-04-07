@@ -69,8 +69,18 @@ class AnswersAdmin(admin.ModelAdmin):
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'description', 'content', 'category', 'pub_date')
 
+class ModuleProgressInline(admin.TabularInline):
+    model = ModuleProgress
+    extra = 0
+
+class LectureProgressInline(admin.TabularInline):
+    model = LectureProgress
+    extra = 0
 
 @admin.register(UserProgress)
 class UserProgressAdmin(admin.ModelAdmin):
-    list_display = ('id','user', 'course')
+    list_display = ('id', 'user', 'course', 'topic', 'lecture', 'module', 'is_completed')
+    # inlines = [ModuleProgressInline, LectureProgressInline]
 
+admin.site.register(ModuleProgress)
+admin.site.register(LectureProgress)

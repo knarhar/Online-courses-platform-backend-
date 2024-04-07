@@ -25,7 +25,10 @@ urlpatterns = [
     path('courses/<int:course_id>/lectures/<int:lecture_id>/', views.getLecture, name='getLecture'),
     path('courses/<int:course_id>/modules/<int:module_id>/', views.getModule, name='getModule'),
     path('courses/<int:course_id>/topics/<int:topic_id>/lectures/', views.get_lectures_for_topic, name='get_lectures_for_topic'),
+    path('courses/<int:course_id>/topics/<int:topic_id>/lectures/<int:lecture_id>/complete', views.update_lecture_progress, name='upd_lect_progress'),
 
+    #path('user-progress/<str:user_id>/courses/<int:course_id>/update', views.UpdateUserProgress.as_view(), name='update_user_progress'),
+    path('user-progress/<int:user_id>/courses/<int:course_id>/initialize', views.initialize_user_progress, name='initialize_user_progress'),
 
 
     path('enrollment/<str:course_id>/', enroll_user, name='enroll_user'),

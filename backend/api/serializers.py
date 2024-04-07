@@ -123,21 +123,23 @@ class ArticleSerializer(ModelSerializer):
         model = Article
         fields = '__all__'
 
+
+class ModuleProgressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModuleProgress
+        fields = '__all__'  # Include all fields for now (customize later if needed)
+
+
 class LectureProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = LectureProgress
-        fields = ['lecture', 'is_completed']
+        fields = '__all__'  # Include all fields for now (customize later if needed)
 
-class ModuleProgressSerializer(serializers.ModelSerializer):
-    lecture_progress = LectureProgressSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = ModuleProgress
-        fields = ['module', 'is_completed', 'lecture_progress']
 
 class UserProgressSerializer(serializers.ModelSerializer):
-    module_progress = ModuleProgressSerializer(many=True, read_only=True)
-
+    completed_topics = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    completed_modules = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    completed_lectures = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     class Meta:
         model = UserProgress
-        fields = ['user', 'course', 'completed_modules', 'module_progress']
+        fields = '__all__'
