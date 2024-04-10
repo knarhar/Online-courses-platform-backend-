@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Course, Article, CustomUser, Enrollment, Lecture, Module, UserProgress, LectureProgress, Topic
+from .models import Course, Article, CustomUser, Enrollment, Lecture, Module, UserProgress,  Topic
 from .serializers import CourseSerializer, ArticleSerializer, UserSerializer, EnrollmentSerializer, LectureSerializer, ModuleSerializer, UserProgressSerializer
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
@@ -270,7 +270,6 @@ def update_lecture_progress(request, course_id, topic_id, lecture_id):
     user = request.user
 
     try:
-        # Получаем или создаем запись прогресса пользователя для этого курса и темы
         user_progress, created = UserProgress.objects.get_or_create(
             user=user, course_id=course_id
         )
@@ -281,5 +280,23 @@ def update_lecture_progress(request, course_id, topic_id, lecture_id):
         user_progress.save()
 
         return Response({'message': 'Lecture completed successfully'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def update_module_progress(request, course_id, topic_id, module_id):
+    user = request.user
+    module = Module.objects.get(pk=module_id)
+    quiz_results = request.data.get('quiz_results')
+    print(quiz_results)
+    try:
+        user_progress = UserProgress.objects.get(user=user, course_id=course_id)
+        user_progress.completed_topics.add(topic_id)
+
+        user_progress.completed_modules.add(module)
+        user_progress.quiz_results = quiz_results
+        user_progress.save()
+        return Response({'message': 'Quiz completed successfully'}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

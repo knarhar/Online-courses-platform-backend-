@@ -5,6 +5,7 @@ from . import views
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import register_user, get_courses_by_category, enroll_user, my_courses, get_articles_by_category, update_profile
 
+
 urlpatterns = [
     path('', views.getRoutes, name='routes'),
     path('login/', views.login_view, name='login'),
@@ -22,12 +23,15 @@ urlpatterns = [
     path('courses/category/<str:category_name>/', get_courses_by_category, name='get_courses_by_category'),
     path('my-courses/', my_courses, name='my-courses'),
     path('courses/<int:course_id>/progress/', views.CourseProgressView.as_view(), name='course_progress'),
+
     path('courses/<int:course_id>/lectures/<int:lecture_id>/', views.getLecture, name='getLecture'),
-    path('courses/<int:course_id>/modules/<int:module_id>/', views.getModule, name='getModule'),
     path('courses/<int:course_id>/topics/<int:topic_id>/lectures/', views.get_lectures_for_topic, name='get_lectures_for_topic'),
     path('courses/<int:course_id>/topics/<int:topic_id>/lectures/<int:lecture_id>/complete', views.update_lecture_progress, name='upd_lect_progress'),
 
-    #path('user-progress/<str:user_id>/courses/<int:course_id>/update', views.UpdateUserProgress.as_view(), name='update_user_progress'),
+
+    path('courses/<int:course_id>/modules/<int:module_id>/', views.getModule, name='getModule'),
+    path('courses/<int:course_id>/topics/<int:topic_id>/module/<int:module_id>/complete', views.update_module_progress, name='upd_module_progress'),
+
     path('user-progress/<int:user_id>/courses/<int:course_id>/initialize', views.initialize_user_progress, name='initialize_user_progress'),
 
 
@@ -38,5 +42,4 @@ urlpatterns = [
     path('articles/<str:pk>/', views.getArticle, name='article'),
     path('articles/category/<str:category_name>/', get_articles_by_category, name='get_articles_by_category')
 ]
-
 

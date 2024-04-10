@@ -117,32 +117,30 @@ class UserProgress(models.Model):
     lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE, null=True, blank=True)
     module = models.ForeignKey(Module, on_delete=models.CASCADE, null=True, blank=True)
     is_completed = models.BooleanField(default=False)
-    completed_topics = models.ManyToManyField(Topic, related_name='completed_topic_progress', blank=True, null=True)
-    completed_modules = models.ManyToManyField(Module, related_name='completed_module_progress', blank=True, null=True)
-    completed_lectures = models.ManyToManyField(Lecture, related_name='completed_lecture_progress', blank=True, null=True)
+    completed_topics = models.ManyToManyField(Topic, related_name='completed_topic_progress', blank=True)
+    completed_modules = models.ManyToManyField(Module, related_name='completed_module_progress', blank=True)
+    completed_lectures = models.ManyToManyField(Lecture, related_name='completed_lecture_progress', blank=True)
+    quiz_results = models.FloatField(null=True, blank=True)
 
     def __str__(self):
-        return f"Progress"
+        return f"Progress for User {self.user} in Course {self.course}"
 
+    # def save_quiz_results(self, course, topic, module, quiz_results):
+    #     self.course = course
+    #     self.topic = topic
+    #     self.module = module
+    #     self.completed_modules.add(module)
+    #     self.completed_topics.add(topic)
+    #     self.quiz_results = quiz_results
+    #     self.save()
 
-class ModuleProgress(models.Model):
-    user_progress = models.ForeignKey(UserProgress, on_delete=models.CASCADE)
-    module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    is_completed = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.user_progress.user.username} - {self.module.title} Module Progress"
-
-
-class LectureProgress(models.Model):
-    user_progress = models.ForeignKey(UserProgress, on_delete=models.CASCADE)
-    lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE)
-    is_completed = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.user_progress.user.username} - {self.lecture.title} Lecture Progress"
-
-
+    def calculate_average_quiz_score(self, course):
+        total_topics = course.topic_set.count()
+        if total_topics == 0:
+            return 0
+        total_quiz_scores = sum(progress.quiz_results for progress in course.userprogress_set.all())
+        average_quiz_score = total_quiz_scores / total_topics
+        return average_quiz_score
 
 class Article(models.Model):
     title = models.CharField(max_length=255)
