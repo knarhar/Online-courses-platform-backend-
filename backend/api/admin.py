@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import CourseCategory, Course, Topic, Lecture, Module, Article, Question, Answers, CustomUser, Enrollment, UserProgress
+from .models import CourseCategory, Course, Topic, Lecture, Module, Article, Question, Answers, CustomUser, Enrollment, \
+    UserProgress
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -50,19 +51,23 @@ class LectureAdmin(admin.ModelAdmin):
     list_display = ('title', 'content', 'link','topic')
 
 
-@admin.register(Module)
-class ModuleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'topic')
+class AnswersInline(admin.TabularInline):
+    model = Answers
+    extra = 1
 
-
-@admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('module', 'question')
+    inlines = [AnswersInline]
 
+admin.site.register(Question, QuestionAdmin)
 
-@admin.register(Answers)
-class AnswersAdmin(admin.ModelAdmin):
-    list_display = ('question', 'answer', 'is_correct')
+class QuestionInline(admin.StackedInline):
+    model = Question
+    extra = 1
+
+class ModuleAdmin(admin.ModelAdmin):
+    inlines = [QuestionInline]
+
+admin.site.register(Module, ModuleAdmin)
 
 
 @admin.register(Article)
@@ -74,3 +79,5 @@ class ArticleAdmin(admin.ModelAdmin):
 class UserProgressAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'course', 'topic', 'lecture', 'module', 'is_completed')
     # inlines = [ModuleProgressInline, LectureProgressInline]
+
+

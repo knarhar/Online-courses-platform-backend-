@@ -23,11 +23,11 @@ urlpatterns = [
     path('courses/category/<str:category_name>/', get_courses_by_category, name='get_courses_by_category'),
     path('my-courses/', my_courses, name='my-courses'),
     path('courses/<int:course_id>/progress/', views.CourseProgressView.as_view(), name='course_progress'),
+    path('courses/<int:course_id>/total_progress/', views.get_total_course_progress, name='course_total_progress'),
 
     path('courses/<int:course_id>/lectures/<int:lecture_id>/', views.getLecture, name='getLecture'),
     path('courses/<int:course_id>/topics/<int:topic_id>/lectures/', views.get_lectures_for_topic, name='get_lectures_for_topic'),
     path('courses/<int:course_id>/topics/<int:topic_id>/lectures/<int:lecture_id>/complete', views.update_lecture_progress, name='upd_lect_progress'),
-
 
     path('courses/<int:course_id>/modules/<int:module_id>/', views.getModule, name='getModule'),
     path('courses/<int:course_id>/topics/<int:topic_id>/module/<int:module_id>/complete', views.update_module_progress, name='upd_module_progress'),

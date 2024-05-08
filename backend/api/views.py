@@ -289,14 +289,27 @@ def update_module_progress(request, course_id, topic_id, module_id):
     user = request.user
     module = Module.objects.get(pk=module_id)
     quiz_results = request.data.get('quiz_results')
-    print(quiz_results)
     try:
         user_progress = UserProgress.objects.get(user=user, course_id=course_id)
         user_progress.completed_topics.add(topic_id)
-
         user_progress.completed_modules.add(module)
-        user_progress.quiz_results = quiz_results
+        user_progress.quiz_results += quiz_results
+        user_progress.quiz_completitions += 1
         user_progress.save()
         return Response({'message': 'Quiz completed successfully'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def get_total_course_progress(request, course_id):
+    user = request.user
+    try:
+        user_progress = UserProgress.objects.get(user=user, course_id=course_id)
+        course = user_progress.course
+        average_quiz_score = user_progress.calculate_average_quiz_score(course)
+        return Response({'average_quiz_score': average_quiz_score}, status=status.HTTP_200_OK)
+    except UserProgress.DoesNotExist:
+        return Response({'error': 'User progress for this course does not exist.'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

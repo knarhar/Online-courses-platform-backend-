@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import Course, Article, CustomUser, Topic, Lecture, Answers,Question,Module, Enrollment, UserProgress
+from .models import Course, Article, CustomUser, Topic, Lecture, Answers, Question, Module, Enrollment, UserProgress
 
 
 class AnswersSerializer(ModelSerializer):
@@ -132,3 +132,4 @@ class UserProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProgress
         fields = '__all__'
+

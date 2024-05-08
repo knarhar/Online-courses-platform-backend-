@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import os
-
+import json
 
 # Create your models here.
 
@@ -75,7 +75,7 @@ class Topic(models.Model):
 class Lecture(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
-    link = models.CharField(max_length=255, null=True)
+    link = models.CharField(max_length=255, null=True, blank=True)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -120,27 +120,24 @@ class UserProgress(models.Model):
     completed_topics = models.ManyToManyField(Topic, related_name='completed_topic_progress', blank=True)
     completed_modules = models.ManyToManyField(Module, related_name='completed_module_progress', blank=True)
     completed_lectures = models.ManyToManyField(Lecture, related_name='completed_lecture_progress', blank=True)
-    quiz_results = models.FloatField(null=True, blank=True)
+    quiz_results = models.IntegerField(default=0)
+    quiz_completitions = models.IntegerField(default=0)
+
+    def set_quiz_results(self, results):
+        self.quiz_results = json.dumps(results)
+
+    def get_quiz_results(self):
+        return json.loads(self.quiz_results) if self.quiz_results else []
 
     def __str__(self):
         return f"Progress for User {self.user} in Course {self.course}"
 
-    # def save_quiz_results(self, course, topic, module, quiz_results):
-    #     self.course = course
-    #     self.topic = topic
-    #     self.module = module
-    #     self.completed_modules.add(module)
-    #     self.completed_topics.add(topic)
-    #     self.quiz_results = quiz_results
-    #     self.save()
-
     def calculate_average_quiz_score(self, course):
-        total_topics = course.topic_set.count()
-        if total_topics == 0:
+        if self.quiz_completitions == 0:
             return 0
-        total_quiz_scores = sum(progress.quiz_results for progress in course.userprogress_set.all())
-        average_quiz_score = total_quiz_scores / total_topics
+        average_quiz_score = self.quiz_results / self.quiz_completitions
         return average_quiz_score
+
 
 class Article(models.Model):
     title = models.CharField(max_length=255)
