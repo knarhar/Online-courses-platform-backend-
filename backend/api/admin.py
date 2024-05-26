@@ -1,28 +1,32 @@
 from django.contrib import admin
 from .models import CourseCategory, Course, Topic, Lecture, Module, Article, Question, Answers, CustomUser, Enrollment, \
-    UserProgress
+    UserProgress, NewsLetter
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-
-
-class CustomUserAdmin(UserAdmin):
-    model = CustomUser
-    list_display = ('id','username', 'email', 'name','pic', 'bank_account', 'is_active', 'is_staff', 'created')
-
-
-admin.site.register(CustomUser, CustomUserAdmin)
 
 # Model Registration to Admin Panel
 
 
+class CustomUserAdmin(UserAdmin):
+    model = CustomUser
+    list_display = ('id', 'username', 'bio', 'email', 'name','pic', 'bank_account', 'is_active', 'is_staff', 'created')
+
+
+admin.site.register(CustomUser, CustomUserAdmin)
+
+
 @admin.register(CourseCategory)
 class CourseCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id','name',)
+    list_display = ('id', 'name',)
+    search_fields = ['name',]
+
 
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('title', 'description', 'display_category', 'is_paid', 'amount', 'currency', 'author', 'pic')
+    list_display = ('id', 'title', 'description', 'display_category', 'is_paid', 'amount', 'currency', 'author', 'pic')
+    search_fields = ['title', ]
+    list_filter = ('is_paid', 'category')
 
     def display_category(self, obj):
         return obj.category.name
@@ -73,6 +77,9 @@ admin.site.register(Module, ModuleAdmin)
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'description', 'content', 'category', 'pub_date')
+    search_fields = ['title', ]
+    list_filter = ('category', 'pub_date', )
+
 
 
 @admin.register(UserProgress)
@@ -80,4 +87,8 @@ class UserProgressAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'course', 'topic', 'lecture', 'module', 'is_completed')
     # inlines = [ModuleProgressInline, LectureProgressInline]
 
+
+@admin.register(NewsLetter)
+class NewsLetterAdmin(admin.ModelAdmin):
+    list_display = ('email', 'subscribing_date')
 

@@ -25,9 +25,12 @@ class CourseCategory(models.Model):
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     name = models.CharField(blank=True, null=True, max_length=50)
+    bio = models.TextField(blank=True, null=True, max_length=255)
+
     pic = models.ImageField(upload_to=user_pic_path, default='avatar.svg', null=True)
     bank_account = models.CharField(max_length=16, default='0000000000000000')
     created = models.DateTimeField(auto_now_add=True)
+
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -141,7 +144,7 @@ class UserProgress(models.Model):
 
 class Article(models.Model):
     title = models.CharField(max_length=255)
-    description = models.CharField(max_length=255, default='')
+    description = models.CharField(max_length=800, default='')
     content = models.TextField()
     pub_date = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(CourseCategory, on_delete=models.CASCADE, default=1)
@@ -152,8 +155,17 @@ class Article(models.Model):
 
 class Enrollment(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.PROTECT)
     enrollment_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.user.username} - {self.course.title}'
+
+
+
+class NewsLetter(models.Model):
+    email = models.EmailField()
+    subscribing_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.email} subscribed {self.subscribing_date}'

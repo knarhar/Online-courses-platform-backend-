@@ -38,7 +38,16 @@ class ModuleSerializer(ModelSerializer):
 class LectureSerializer(ModelSerializer):
     class Meta:
         model = Lecture
-        fields = ['id', 'title', 'content', 'link']
+        fields = ['id', 'title', 'content', 'link', 'topic']
+
+    def create(self, validated_data):
+        topic_data = validated_data.pop('topic', None)
+        if topic_data:
+            topic_instance, _ = Topic.objects.get_or_create(title=topic_data)
+            validated_data['topic'] = topic_instance
+
+        lecture = Lecture.objects.create(**validated_data)
+        return lecture
 
 
 class TopicSerializer(ModelSerializer):
@@ -87,7 +96,6 @@ class CourseSerializer(ModelSerializer):
 
     def get_pic(self, obj):
         request = self.context.get('request')
-
         if obj.pic:
             return request.build_absolute_uri(obj.pic.url)
         return None
